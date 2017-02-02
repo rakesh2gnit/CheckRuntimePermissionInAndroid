@@ -23,7 +23,6 @@ import android.widget.Toast;
 
 import com.rakesh.checkruntimepermissioninandroid.activitymanager.BaseActivity;
 import com.rakesh.checkruntimepermissioninandroid.alertmanager.AlertManager;
-import com.rakesh.checkruntimepermissioninandroid.broadcastreceiver.NetworkChangeReceiver;
 import com.rakesh.checkruntimepermissioninandroid.networkmanager.NetworkUtil;
 import com.rakesh.checkruntimepermissioninandroid.permissionmanager.PermissionChecker;
 
@@ -33,7 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 
-public class MainActivity extends BaseActivity implements PermissionChecker.OnRequestPermissionResult, NetworkChangeReceiver.OnNetworkChangeListener {
+public class MainActivity extends BaseActivity implements PermissionChecker.OnRequestPermissionResult {
 
     private Button btn1, btn2, btn3, btnChkConn;
     private String mCurrentPhotoPath;
@@ -42,6 +41,7 @@ public class MainActivity extends BaseActivity implements PermissionChecker.OnRe
     private AlertManager alr = new AlertManager();
     public String directoryGalleryPath = "/MyDirectory/Gallery";
     private boolean isCount = false;
+    private BroadcastReceiver connectionReceiver, noConnectionReceiver;
 
     @Override
     protected int getLayoutResId() {
@@ -132,16 +132,29 @@ public class MainActivity extends BaseActivity implements PermissionChecker.OnRe
             }
         });
 
-        IntentFilter intentFilter = new IntentFilter(NetworkChangeReceiver.NETWORK_AVAILABLE_ACTION);
-        LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
+        noConnectionReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                String networktype = intent.getStringExtra(NetworkChangeReceiver.NETWORK_TYPE);
-                //String networkStatus = isNetworkAvailable ? "connected" : "disconnected";
-
-                Snackbar.make(findViewById(R.id.activity_main), "Network Type: " + networktype, Snackbar.LENGTH_LONG).show();
+                Log.e("MainActivity: ", "not connected");
             }
-        }, intentFilter);
+        };
+
+        connectionReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.e("MainActivity: ", "connected");
+            }
+        };
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(connectionReceiver, new IntentFilter("connected"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(noConnectionReceiver, new IntentFilter("notconnected"));
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(connectionReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(noConnectionReceiver);
     }
 
     private void openGallery() {
@@ -371,11 +384,5 @@ public class MainActivity extends BaseActivity implements PermissionChecker.OnRe
                 alr.successdialog.dismiss();
             }
         });
-    }
-
-    @Override
-    public void onNetworkChanged(String status) {
-        Log.e("onNetworkChanged:", status);
-        Toast.makeText(MainActivity.this, "Gallery4U: "+status, Toast.LENGTH_LONG).show();
     }
 }
