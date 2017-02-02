@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -13,12 +14,14 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.rakesh.checkruntimepermissioninandroid.activitymanager.BaseActivity;
@@ -41,6 +44,7 @@ public class MainActivity extends BaseActivity implements PermissionChecker.OnRe
     private AlertManager alr = new AlertManager();
     public String directoryGalleryPath = "/MyDirectory/Gallery";
     private boolean isCount = false;
+    private CoordinatorLayout coordinatorLayout;
     private BroadcastReceiver connectionReceiver, noConnectionReceiver;
 
     @Override
@@ -55,6 +59,7 @@ public class MainActivity extends BaseActivity implements PermissionChecker.OnRe
 
         dirGalleryPath = getFilesDir().getAbsolutePath() + directoryGalleryPath;
 
+        coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
         btn1 = (Button) findViewById(R.id.btn1);
         btn2 = (Button) findViewById(R.id.btn2);
         btn3 = (Button) findViewById(R.id.btn3);
@@ -136,6 +141,23 @@ public class MainActivity extends BaseActivity implements PermissionChecker.OnRe
             @Override
             public void onReceive(Context context, Intent intent) {
                 Log.e("MainActivity: ", "not connected");
+                Snackbar snackbar = Snackbar
+                        .make(coordinatorLayout, "No Internet Connection!", Snackbar.LENGTH_LONG)
+                        .setAction("RETRY", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                            }
+                        });
+
+                // Changing message text color
+                snackbar.setActionTextColor(Color.RED);
+
+                // Changing action button text color
+                View sbView = snackbar.getView();
+                TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                textView.setTextColor(Color.YELLOW);
+
+                snackbar.show();
             }
         };
 
@@ -143,6 +165,16 @@ public class MainActivity extends BaseActivity implements PermissionChecker.OnRe
             @Override
             public void onReceive(Context context, Intent intent) {
                 Log.e("MainActivity: ", "connected");
+                Snackbar snackbar = Snackbar
+                        .make(coordinatorLayout, "Connected Established!!!", Snackbar.LENGTH_SHORT)
+                        .setAction("UNDO", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                Snackbar snackbar1 = Snackbar.make(coordinatorLayout, "Message is restored!", Snackbar.LENGTH_SHORT);
+                                snackbar1.show();
+                            }
+                        });
+                snackbar.show();
             }
         };
 
